@@ -69,6 +69,6 @@ let ``When provided a sequence of 1s and a sequence of 0s Bitmap.And returns a s
 [<Test>]
 let ``When provided with interleaved 0s and 1s Bitmap.And returns a sequence of 0s of the same length``() =
    let expected = Seq.init 2 (fun _ -> 0uy)
-   let s1, s2 = [ 170uy; 85uy ], [ 85uy;  170uy ]
+   let s1, s2 = [ 0b10101010uy; 0b01010101uy ], [ 0b01010101uy; 0b10101010uy ]
    let actual = Bitmap.And s1 s2
    actual |> should equal expected
