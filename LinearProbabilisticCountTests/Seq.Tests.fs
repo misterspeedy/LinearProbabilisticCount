@@ -8,7 +8,7 @@ open BigDataCounting
 // Seq.combine
 
 [<Test>]
-let ``When provided with two empty sequence Seq.combine returns an empty sequence``() =
+let ``When provided with two empty sequences Seq.combine returns an empty sequence``() =
    let expected = 0
    let s1, s2 = Seq.empty, Seq.empty
    let actual = Seq.combine id s1 s2 |> Seq.length

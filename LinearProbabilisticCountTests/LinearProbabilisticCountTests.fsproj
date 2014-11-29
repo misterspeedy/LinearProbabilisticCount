@@ -52,6 +52,7 @@
     <Compile Include="Seq.Tests.fs" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <Compile Include="Bitmap.Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsUnit.NUnit">
