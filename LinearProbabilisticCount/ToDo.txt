@@ -1,0 +1,1 @@
+﻿Add map-reduce functionality that uses BitMap.AllOr to consolidate separate counts
