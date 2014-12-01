@@ -149,8 +149,8 @@ let ``When provided with a sequence consisting of ten x 255 bytes OneCount retur
 [<Test>]
 let ``When provided with a sequence consisting of ten x 00000001 bytes OneCount returns 10``() =
    let expected = 10
-   let two55s = Seq.init 10 (fun _ -> 1uy)
-   let actual = two55s|> Bitmap.OneCount
+   let ones = Seq.init 10 (fun _ -> 1uy)
+   let actual = ones |> Bitmap.OneCount
    actual |> should equal expected
 
 [<Test>]

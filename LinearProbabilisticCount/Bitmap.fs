@@ -18,7 +18,10 @@ module Bitmap =
    /// Applies a bitwise OR between corresponding bytes in all the
    /// input sequences and returns a byte sequence of the results.
    let AllOr (ms : seq<ByteSeq>) =
-      ms |> Seq.reduce Or
+      if ms |> Seq.isEmpty then
+         Seq.empty
+      else
+         ms |> Seq.reduce Or
 
    /// A sequence of bytes 0000 0000, 0000 0001, 0000 0010... 1111 1111.
    let private Masks = 
