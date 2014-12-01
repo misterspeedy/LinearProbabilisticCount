@@ -111,6 +111,31 @@ let ``When provided with a sequence of sequences containing interleaved bits All
    let actual = [odd; even] |> Seq.ofList |> Bitmap.AllOr
    actual |> should equal expected
 
+[<Test>]
+let ``When provided with a sequence of sequences containing aligned bits AllOr returns a sequence of the same bits``() =
+   let odd = [0b01010101uy; 0b01010101uy] |> Seq.ofList
+   let expected = [0b01010101uy; 0b01010101uy] |> Seq.ofList 
+   let actual = [odd; odd] |> Seq.ofList |> Bitmap.AllOr
+   actual |> should equal expected
+
+[<Test>]
+let ``When provided with a sequence of sequences of arbitrary bits AllOr returns the correct results``() =
+   let s1 =       [0b10010011uy; 0b10101010uy; 0b11101101uy; 0b10101111uy] |> Seq.ofList
+   let s2 =       [0b10100000uy; 0b10001100uy; 0b00000000uy; 0b01101100uy] |> Seq.ofList
+   let s3 =       [0b00000010uy; 0b10000100uy; 0b00110000uy; 0b10000000uy] |> Seq.ofList
+   let expected = [0b10110011uy; 0b10101110uy; 0b11111101uy; 0b11101111uy] |> Seq.ofList 
+   let actual = [s1; s2; s3] |> Seq.ofList |> Bitmap.AllOr
+   actual |> should equal expected
+
+[<Test>]
+let ``When provided with unequal length sequences AllOr ignores additional elements in the longer sequences``() =
+   let s1 =       [0b10010011uy; 0b10101010uy; 0b11101101uy; 0b10101111uy] |> Seq.ofList
+   let s2 =       [0b10100000uy; 0b10001100uy; 0b00000000uy; 0b01101100uy] |> Seq.ofList
+   let s3 =       [0b00000010uy; 0b10000100uy; 0b00110000uy] |> Seq.ofList
+   let expected = [0b10110011uy; 0b10101110uy; 0b11111101uy] |> Seq.ofList 
+   let actual = [s1; s2; s3] |> Seq.ofList |> Bitmap.AllOr
+   actual |> should equal expected
+
 // OnesInByte
 
 [<TestCase(0b00000000uy, 0)>]
@@ -167,4 +192,37 @@ let ``When provided with a sequence consisting of arbitrary bytes OneCount retur
                 0b00101011uy; 0b11111110uy; 0b01000000uy; 0b00000000uy; 0b10101010uy ] 
    let actual = bytes |> Bitmap.OneCount
    actual |> should equal expected
+
+// SetBit
+
+[<Test>]
+let ``When provided with a target bitmap that is empty SetBit raises an exception``() =
+   let bitMap : Bitmap.ByteArray = [||]
+   let cant = (fun () -> Bitmap.SetBit bitMap 0u)
+   cant |> should throw typeof<System.IndexOutOfRangeException>
+
+[<TestCase(0, [|0b00000001|])>]
+[<TestCase(1, [|0b00000010|])>]
+[<TestCase(7, [|0b10000000|])>]
+let ``When provided with a target bitmap of one empty byte SetBit sets the correct bit``(index, expected) =
+   let bitMap : Bitmap.ByteArray = [|0uy|]
+   Bitmap.SetBit bitMap index
+   let actual = bitMap
+   actual |> should equal expected
+
+[<TestCase(0, [|0b00000001; 0b00000000|])>]
+[<TestCase(7, [|0b10000000; 0b00000000|])>]
+[<TestCase(8, [|0b00000000; 0b00000001|])>]
+[<TestCase(15, [|0b00000000; 0b10000000|])>]
+let ``When provided with a target bitmap of several empty bytes SetBit sets the correct bit``(index, expected) =
+   let bitMap = [|0uy; 0uy|]
+   Bitmap.SetBit bitMap index
+   let actual = bitMap
+   actual |> should equal expected
+
+[<Test>]
+let ``When provided with a out of range index SetBit raises an exception``() =
+   let bitMap : Bitmap.ByteArray = [|0uy; 0uy; 0uy|]
+   let cant = (fun () -> Bitmap.SetBit bitMap 24u)
+   cant |> should throw typeof<System.IndexOutOfRangeException>
 
