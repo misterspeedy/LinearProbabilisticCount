@@ -53,6 +53,7 @@
     <None Include="packages.config" />
     <None Include="app.config" />
     <Compile Include="Bitmap.Tests.fs" />
+    <Compile Include="LinearProbabilistic.Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsUnit.NUnit">
