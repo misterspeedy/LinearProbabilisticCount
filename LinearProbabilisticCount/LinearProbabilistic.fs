@@ -35,39 +35,32 @@ module LinearProbabilistic =
    let private EstimateFromMap map = 
       let w = map |> Bitmap.OneCount |> double
       // TODO avoid recalculating length
-      let m = map |> Seq.length |> double
-
+      let m = map |> Seq.length |> double // TODO why is this right? Should be length in bits????
       -m * System.Math.Log((m-w)/m)
 
    // TODO remove mapSizeBytes/Bits confusion and always work in bits
    let Count (mapSizeBytes : int) (s : seq<'T>) =
       let mapSizeBits = mapSizeBytes * 8
-
       let map = CreateMap mapSizeBits s
-
       EstimateFromMap map
 
    let PCount (mapSizeBytes : int) (parallelism : int) (s : seq<'T>) =
       let mapSizeBits = mapSizeBytes * 8
-      // Divide the sequence up into n sections
+   
+      // Divide the sequence up into n sections:
       let numbered =
          s |> Seq.mapi (fun i x -> i, x)
       let sections =
          [0..parallelism-1]
-         // TODO PSeq
-         |> Seq.map (fun x -> numbered |> Seq.filter (fun (i, _) -> i % parallelism = 0) |> Seq.map snd)
+         |> PSeq.map (fun x -> numbered |> Seq.filter (fun (i, _) -> i % parallelism = x) |> Seq.map snd)
 
-      // Separately and in parallel compute the bitmaps
-      let maps =
+      // Separately and in parallel compute the bitmaps.
+      // OR all the bitmaps together:
+      let map =
          sections 
-         // TODO PSeq
-         |> PSeq.map (fun s -> s |> CreateMap mapSizeBits |> Seq.ofArray)
-      
-      // Or all the bitmaps together
-      let unifiedMap = maps |> Bitmap.AllOr
+         |> PSeq.map (fun section -> section |> CreateMap mapSizeBits |> Seq.ofArray)
+         |> Bitmap.AllOr
 
-      // Count the number of bits in the Or'd bitmap
-      // Apply the standard estimation formula
-      EstimateFromMap unifiedMap
-
+      // Apply the standard estimation formula:
+      EstimateFromMap map
 
