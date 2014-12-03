@@ -47,8 +47,3 @@ module Bitmap =
       let mask = pown 2 bitIndex |> byte
       bytes.[byteIndex] <- currentByte ||| mask
 
-   /// Provides a sequence of random bytes.
-   let RandomMap size : ByteSeq =
-      let r = new System.Random()
-      let next() = r.Next(0, 255) |> byte
-      Array.init size (fun _ -> next()) |> Seq.ofArray
