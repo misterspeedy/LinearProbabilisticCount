@@ -11,15 +11,10 @@ module LinearProbabilistic =
 
    /// Calculates the number of whole bytes required to accommodate the specified number of bits.
    let bitsToBytes (bits : int<Bit>) : int<Byte> = 
-      double(bits) / 8. |> System.Math.Ceiling |> int |> LanguagePrimitives.Int32WithMeasure
-//
-//      let  = bits / 8 |> int
-//      let remainder = int(bits) % 8
-//      (if remainder > 0 then x+1 else x) |> LanguagePrimitives.Int32WithMeasure
-
-//      let wholeBytes = (double)bits / 8. |> System.Math.Ceiling |> int
-//      int<byte>(wholeBytes)
-//      //(int<byte>) // <bit/byte>
+      double(bits) / 8. 
+      |> System.Math.Ceiling 
+      |> int 
+      |> LanguagePrimitives.Int32WithMeasure
 
    /// Gets the hash code of an object but cast to uint32.
    /// Has a higher probability of collisions than the pure hash.
