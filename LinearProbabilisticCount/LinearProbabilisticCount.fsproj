@@ -55,6 +55,7 @@
     <Content Include="ToDo.txt" />
     <None Include="packages.config" />
     <None Include="app.config" />
+    <None Include="Demo.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Collections.ParallelSeq">

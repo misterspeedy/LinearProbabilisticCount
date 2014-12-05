@@ -60,9 +60,9 @@ let private GuidsSequenceRepeated cardinality count =
 
 [<TestCase(1000, 10000, 1E-3, 4)>]
 [<TestCase(1000, 1000, 1E-2, 4)>]
-[<TestCase(1000, 100, 1E-1, 4)>]
-[<TestCase(10000, 10000, 1.0, 100)>]
-[<TestCase(10000, 1000, 5.0, 100)>]
+[<TestCase(1000, 100, 1, 4)>]
+[<TestCase(10000, 10000, 2.0, 100)>]
+[<TestCase(10000, 1000, 10.0, 100)>]
 let ``Given a sequence with a given cardinality and a specific map size Count produces an estimate within a specific margin``(totalCount, mapSize, margin, expected) =
    let cardinality = expected
    let guids = GuidsSequenceRepeated cardinality (totalCount * cardinality)
@@ -73,17 +73,15 @@ let ``Given a sequence with a given cardinality and a specific map size Count pr
 
 [<TestCase(1000, 10000, 1E-3, 8, 4)>] 
 [<TestCase(1000, 1000, 1E-2, 8, 4)>] 
-[<TestCase(1000, 100, 1E-1, 8, 4)>] 
+[<TestCase(1000, 100, 1, 8, 4)>] 
 [<TestCase(10000, 10000, 1.0, 8, 100)>]
-[<TestCase(10000, 1000, 5.0, 8, 100)>] 
+[<TestCase(10000, 1000, 10.0, 8, 100)>] 
 let ``Given a sequence with a given cardinality map size and degree of parallelism PCount produces an estimate within a specific margin``(totalCount, mapSize, margin, parallelism, expected) =
    let cardinality = expected
    let guids = GuidsSequenceRepeated cardinality (totalCount * cardinality)
    let actual = guids |> LinearProbabilistic.PCount mapSize parallelism
    actual |> should (equalWithin margin) expected 
 
-// TODO have a specific exception message for map size too small instead of infinity
-// TODO return an accuracy estimate as part of the return results?
 
 
 

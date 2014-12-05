@@ -4,6 +4,23 @@ open FSharp.Collections.ParallelSeq
 
 module LinearProbabilistic =
 
+   [<Measure>]
+   type Bit
+   [<Measure>]
+   type Byte
+
+   /// Calculates the number of whole bytes required to accommodate the specified number of bits.
+   let bitsToBytes (bits : int<Bit>) : int<Byte> = 
+      double(bits) / 8. |> System.Math.Ceiling |> int |> LanguagePrimitives.Int32WithMeasure
+//
+//      let  = bits / 8 |> int
+//      let remainder = int(bits) % 8
+//      (if remainder > 0 then x+1 else x) |> LanguagePrimitives.Int32WithMeasure
+
+//      let wholeBytes = (double)bits / 8. |> System.Math.Ceiling |> int
+//      int<byte>(wholeBytes)
+//      //(int<byte>) // <bit/byte>
+
    /// Gets the hash code of an object but cast to uint32.
    /// Has a higher probability of collisions than the pure hash.
    let Uint32Hash o =
@@ -18,16 +35,11 @@ module LinearProbabilistic =
       else
          (o |> Uint32Hash) % max
 
-   /// Produces a linear probabilistic count of the unique items
-   /// in the given sequence, using the specified size for the
-   /// bitmap.  Accuracy increases with larger map sizes.
-   ///
-   /// http://highscalability.com/blog/2012/4/5/big-data-counting-how-to-count-a-billion-distinct-objects-us.html
-   let private CreateMap (mapSizeBits : int) (s : seq<'T>) =
-      let map = Array.zeroCreate (mapSizeBits*8)
+   let private CreateMap (mapSize : int<Bit>) (s : seq<'T>) =
+      let map = Array.zeroCreate (mapSize |> bitsToBytes |> int)
 
       s
-      |> Seq.map (WrappedHash (uint32 mapSizeBits))
+      |> Seq.map (WrappedHash (mapSize |> uint32))
       |> Seq.iter (Bitmap.SetBit map)
 
       map
@@ -35,30 +47,36 @@ module LinearProbabilistic =
    let private EstimateFromMap map = 
       let w = map |> Bitmap.OneCount |> double
       // TODO avoid recalculating length
-      let m = map |> Seq.length |> double // TODO why is this right? Should be length in bits????
-      -m * System.Math.Log((m-w)/m)
+      let m = (map |> Seq.length |> double) * 8.
+      -m * System.Math.Log((m-w)/m) |> int
 
-   // TODO remove mapSizeBytes/Bits confusion and always work in bits
-   let Count (mapSizeBytes : int) (s : seq<'T>) =
-      let mapSizeBits = mapSizeBytes * 8
-      let map = CreateMap mapSizeBits s
+   /// Produces a linear probabilistic count of the unique items
+   /// in the given sequence, using the specified size for the
+   /// bitmap.  Accuracy increases with larger map sizes.
+   ///
+   /// http://highscalability.com/blog/2012/4/5/big-data-counting-how-to-count-a-billion-distinct-objects-us.html
+   let Count (mapSize : int<Bit>) (s : seq<'T>) =
+      let map = CreateMap mapSize s
       EstimateFromMap map
 
-   let PCount (mapSizeBytes : int) (parallelism : int) (s : seq<'T>) =
-      let mapSizeBits = mapSizeBytes * 8
-   
+   /// Produces a linear probabilistic count of the unique items
+   /// in the given sequence, using the specified size for the
+   /// bitmap.  Accuracy increases with larger map sizes. Uses
+   /// the FSharp parallel sequence library to parallelise the
+   /// calculation.
+   ///
+   /// http://highscalability.com/blog/2012/4/5/big-data-counting-how-to-count-a-billion-distinct-objects-us.html
+   let PCount (mapSize : int<Bit>) (parallelism : int) (s : seq<'T>) =
       // Divide the sequence up into n sections:
       let numbered =
          s |> Seq.mapi (fun i x -> i, x)
-      let sections =
+
+      // Separately and in parallel compute the bitmaps, then
+      // OR all the resulting bitmaps together:
+      let map =
          [0..parallelism-1]
          |> PSeq.map (fun x -> numbered |> Seq.filter (fun (i, _) -> i % parallelism = x) |> Seq.map snd)
-
-      // Separately and in parallel compute the bitmaps.
-      // OR all the bitmaps together:
-      let map =
-         sections 
-         |> PSeq.map (fun section -> section |> CreateMap mapSizeBits |> Seq.ofArray)
+         |> PSeq.map (fun section -> section |> CreateMap mapSize |> Seq.ofArray)
          |> Bitmap.AllOr
 
       // Apply the standard estimation formula:

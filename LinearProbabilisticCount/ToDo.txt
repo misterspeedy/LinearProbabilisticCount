@@ -1,1 +1,2 @@
 ﻿Add map-reduce functionality that uses BitMap.AllOr to consolidate separate counts
+Return an accuracy estimate as part of the return results?
